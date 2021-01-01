@@ -1,0 +1,139 @@
+// Office Desk Console. Six buttons for controlling room devices from the desk.
+
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <WiFiClient.h>
+
+// Network and MQTT Settings
+const char* ssid = "YOURNETWORK"; //put your wifi ssid here
+const char* password = "NETWORKPASSWORD"; //put your wifi password here.
+const char* mqtt_server = "";
+
+
+// Button 1
+const int BTN_PIN_1 = 0;
+int BTN_1_STATUS;
+
+// Button 2
+const int BTN_PIN_2 = 4;
+int BTN_2_STATUS;
+
+// Button 3
+const int BTN_PIN_3 = 5;
+int BTN_3_STATUS;
+
+// Button 4
+const int BTN_PIN_4 = 12;
+int BTN_4_STATUS;
+
+// Button 5
+const int BTN_PIN_5 = 13;
+int BTN_5_STATUS;
+
+// Button 6
+const int BTN_PIN_6 = 14;
+int BTN_6_STATUS;
+
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup_wifi() {
+   delay(100);
+  // We start by connecting to a WiFi network
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) 
+    {
+      delay(500);
+    }
+  randomSeed(micros());
+}
+
+void callback(char* topic, byte* payload, unsigned int length) 
+{
+  // this is where we would subscribe to MQTT commands.
+} //end callback
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) 
+  {
+    // Create a random client ID
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    //if you MQTT broker has clientID,username and password
+    //please change following line to    if (client.connect(clientId,userName,passWord))
+    if (client.connect(clientId.c_str()))
+    {
+      //once connected to MQTT broker, subscribe command if any
+      // client.subscribe("topic_goes_here"); // Only if this device needs to listen for other commands
+    } else {
+
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+} //end reconnect()
+
+void setup() {
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+  
+  pinMode(BTN_PIN_1,INPUT_PULLUP);
+  pinMode(BTN_PIN_2,INPUT_PULLUP);
+  pinMode(BTN_PIN_3,INPUT_PULLUP);
+  pinMode(BTN_PIN_4,INPUT_PULLUP);
+  pinMode(BTN_PIN_5,INPUT_PULLUP);
+  pinMode(BTN_PIN_6,INPUT_PULLUP);
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+  
+     BTN_1_STATUS=digitalRead(BTN_PIN_1);
+     BTN_2_STATUS=digitalRead(BTN_PIN_2);
+     BTN_3_STATUS=digitalRead(BTN_PIN_3);
+     BTN_4_STATUS=digitalRead(BTN_PIN_4);
+     BTN_5_STATUS=digitalRead(BTN_PIN_5);
+     BTN_6_STATUS=digitalRead(BTN_PIN_6);
+
+     // Message
+     String message = "TOGGLE";
+     char message_toggle[58];
+     message.toCharArray(message_toggle,58);
+     
+     if(!BTN_1_STATUS) {      
+       client.publish("office_desk_console/button_1", message_toggle);
+       delay(500);
+     }
+
+     if(!BTN_2_STATUS) {
+       client.publish("office_desk_console/button_2", message_toggle);
+       delay(500);
+     }
+
+     if(!BTN_3_STATUS) {
+       client.publish("office_desk_console/button_3", message_toggle);
+       delay(500);
+     }
+
+     if(!BTN_4_STATUS) {
+       client.publish("office_desk_console/button_4", message_toggle);
+       delay(500);
+     }
+
+     if(!BTN_5_STATUS) {
+       client.publish("office_desk_console/button_5", message_toggle);
+       delay(500);
+     }
+
+     if(!BTN_6_STATUS) {
+       client.publish("office_desk_console/button_6", message_toggle);
+       delay(500);
+     }
+}
